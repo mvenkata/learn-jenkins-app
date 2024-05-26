@@ -25,6 +25,8 @@ pipeline {
                     echo "Testing Phase"
                     echo `pwd`
                     test -f 'build/index.html'
+                    echo "${?}"
+                    npm test
                 '''
             }
         }
