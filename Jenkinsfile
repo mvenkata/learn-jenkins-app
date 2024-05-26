@@ -26,7 +26,11 @@ pipeline {
                     echo `pwd`
                     test -f 'build/index.html'
                     echo "${?}"
-                    npm test
+                    if [[ "${?}" -eq 0 ]]
+                    then
+                        echo "Testing the application"
+                        npm test
+                    fi
                 '''
             }
         }
