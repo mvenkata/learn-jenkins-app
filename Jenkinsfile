@@ -20,17 +20,19 @@ pipeline {
             }
         }
         stage('Test') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
              steps {
                 sh '''
                     echo "Testing Phase"
                     echo `pwd`
                     test -f 'build/index.html'
-                    echo "${?}"
-                    if [[ "${?}" -eq 0 ]]
-                    then
-                        echo "Testing the application"
-                        npm test
-                    fi
+                    # echo "${?}"
+                    npm test
                 '''
             }
         }
