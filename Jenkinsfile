@@ -98,18 +98,52 @@ pipeline {
             steps {
                 sh '''
                    ## do not use -g arg which will wail with access.
-                   npm install netlify-cli
+                   npm install netlify-cli node-jq
                    test -f ./node_modules/.bin/netlify
                    ./node_modules/.bin/netlify --version
                    echo "Deploying to Staging, Site ID: ${NETLIFY_SITE_ID}"
                    ./node_modules/.bin/netlify status
                    ## removed the prod flag and all others are same as prod
-                   ./node_modules/.bin/netlify deploy --dir=build
+                   ./node_modules/.bin/netlify deploy --dir=build --json | tee deploy-output.json
+                   ##./node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json
+                '''
+                script {
+                    env.STAGING_URL = sh(script: "./node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json", returnStdout:true)
+                }
+            }
+            
+        }
 
+        stage('Staging E2E') {          
+            /*
+                This is End2End staging phase with docke
+            */
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    reuseNode true
+                    // Donot run it as root and it is not an good idea
+                    //args '-u root:root'
+                }
+            }
 
+            environment {
+                CI_ENVIRONMENT_URL="${env.STAGING_URL}"
+            }
+            
+            steps {
+                sh '''
+                    echo "Prod E2E Phase..."
+                    npx playwright test --reporter=html
                 '''
             }
-        }
+
+            post {
+                always {
+                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwrite E2E Staging Report', reportTitles: '', useWrapperFileDirectly: true])
+                }
+            }
+        }    
 
         stage('Approval') {
             steps {
