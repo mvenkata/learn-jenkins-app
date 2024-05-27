@@ -57,7 +57,9 @@ pipeline {
                 sh '''
                     echo "E2E Phase"
                     npm install serve
-                    node_modules/.bin/serve -s build
+                    ## Run in background in order to avoid stuck in jenkins
+                    node_modules/.bin/serve -s build &
+                    sleep 10
                     npx playwright test
                 '''
             }
