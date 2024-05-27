@@ -156,34 +156,14 @@ pipeline {
             }
 
         }
-        stage('Deploy Prod') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    reuseNode true
-                }
-            }
-            steps {
-                sh '''
-                   ## do not use -g arg which will wail with access.
-                   npm install netlify-cli
-                   test -f ./node_modules/.bin/netlify
-                   ./node_modules/.bin/netlify --version
-                   echo "Deploying to production, Site ID: ${NETLIFY_SITE_ID}"
-                   ./node_modules/.bin/netlify status
-                   ./node_modules/.bin/netlify deploy --dir=build --prod
 
-
-                '''
-            }
-        }
-
-        stage('Prod E2E') {          
+        stage('Deploy Prod') {          
             /*
                 This is End2End test phase with docke
             */
             agent {
                 docker {
+                    ## This image has node, hence merging
                     image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
                     reuseNode true
                     // Donot run it as root and it is not an good idea
@@ -197,6 +177,15 @@ pipeline {
             
             steps {
                 sh '''
+                    node --version
+                    echo "Prod Deploy Phase"
+                    ## do not use -g arg which will wail with access.
+                    npm install netlify-cli
+                    test -f ./node_modules/.bin/netlify
+                    ./node_modules/.bin/netlify --version
+                    echo "Deploying to production, Site ID: ${NETLIFY_SITE_ID}"
+                    ./node_modules/.bin/netlify status
+                    ./node_modules/.bin/netlify deploy --dir=build --prod
                     echo "Prod E2E Phase..."
                     npx playwright test --reporter=html
                 '''
