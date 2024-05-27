@@ -110,12 +110,7 @@ pipeline {
             }
         }
 
-        stage('Prod E2E') {
-            
-            environment {
-                CI_ENVIRONMENT_URL='https://elegant-pika-614d48.netlify.app'
-            }
-    }
+        stage('Prod E2E') {          
             /*
                 This is End2End test phase with docke
             */
@@ -127,6 +122,11 @@ pipeline {
                     //args '-u root:root'
                 }
             }
+
+            environment {
+                CI_ENVIRONMENT_URL='https://elegant-pika-614d48.netlify.app'
+            }
+            
             steps {
                 sh '''
                     echo "Prod E2E Phase..."
