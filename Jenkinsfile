@@ -88,35 +88,36 @@ pipeline {
 
         }
 
-        stage('Deploy Staging') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    reuseNode true
-                }
-            }
-            steps {
-                sh '''
-                   ## do not use -g arg which will wail with access.
-                   npm install netlify-cli node-jq
-                   test -f ./node_modules/.bin/netlify
-                   ./node_modules/.bin/netlify --version
-                   echo "Deploying to Staging, Site ID: ${NETLIFY_SITE_ID}"
-                   ./node_modules/.bin/netlify status
-                   ## removed the prod flag and all others are same as prod
-                   ./node_modules/.bin/netlify deploy --dir=build --json | tee deploy-output.json
-                   ##./node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json
-                '''
-                script {
-                    env.STAGING_URL = sh(script: "./node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json", returnStdout:true)
-                }
-            }
+        // stage('Deploy Staging') {
+        //     agent {
+        //         docker {
+        //             image 'node:18-alpine'
+        //             reuseNode true
+        //         }
+        //     }
+        //     steps {
+        //         sh '''
+        //            ## do not use -g arg which will wail with access.
+        //            npm install netlify-cli node-jq
+        //            test -f ./node_modules/.bin/netlify
+        //            ./node_modules/.bin/netlify --version
+        //            echo "Deploying to Staging, Site ID: ${NETLIFY_SITE_ID}"
+        //            ./node_modules/.bin/netlify status
+        //            ## removed the prod flag and all others are same as prod
+        //            ./node_modules/.bin/netlify deploy --dir=build --json | tee deploy-output.json
+        //            ##./node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json
+        //         '''
+        //         script {
+        //             env.STAGING_URL = sh(script: "./node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json", returnStdout:true)
+        //         }
+        //     }
             
-        }
+        // }
 
-        stage('Staging E2E') {          
+        stage('Deploy Staging') {          
             /*
-                This is End2End staging phase with docke
+                Mergeted both deploy and E2E staging
+                This is End2End staging phase with docker
             */
             agent {
                 docker {
@@ -128,11 +129,23 @@ pipeline {
             }
 
             environment {
-                CI_ENVIRONMENT_URL="${env.STAGING_URL}"
+                // We need this, since property file sets localhost
+                CI_ENVIRONMENT_URL='STAGEING_TO_BE_SET'
             }
             
             steps {
                 sh '''
+                    echo 'Deploy Staging Phase'
+                    node --version
+                    ## do not use -g arg which will wail with access.
+                    npm install netlify-cli node-jq
+                    test -f ./node_modules/.bin/netlify
+                    ./node_modules/.bin/netlify --version
+                    echo "Deploying to Staging, Site ID: ${NETLIFY_SITE_ID}"
+                    ./node_modules/.bin/netlify status
+                    ## removed the prod flag and all others are same as prod
+                    ./node_modules/.bin/netlify deploy --dir=build --json | tee deploy-output.json
+                    CI_ENVIRONMENT_URL=$(./node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json)
                     echo "Prod E2E Phase..."
                     npx playwright test --reporter=html
                 '''
