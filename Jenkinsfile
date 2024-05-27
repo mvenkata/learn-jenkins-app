@@ -8,6 +8,13 @@ pipeline {
     }
 
     stages {
+
+        stage('Docker') {
+            steps {
+                sh 'docker build -t my-playwright .'
+            }
+        }
+
         // This is build phase
         stage('Build') {
             agent {
@@ -122,7 +129,8 @@ pipeline {
             */
             agent {
                 docker {
-                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    //image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    image 'my-playwright'
                     reuseNode true
                     // Donot run it as root and it is not an good idea
                     //args '-u root:root'
@@ -139,14 +147,17 @@ pipeline {
                     echo 'Deploy Staging Phase'
                     node --version
                     ## do not use -g arg which will wail with access.
-                    npm install netlify-cli node-jq
-                    test -f ./node_modules/.bin/netlify
-                    ./node_modules/.bin/netlify --version
+                    ##npm install netlify-cli node-jq
+                    ##test -f ./node_modules/.bin/netlify
+                    netlify --version
                     echo "Deploying to Staging, Site ID: ${NETLIFY_SITE_ID}"
-                    ./node_modules/.bin/netlify status
+                    ##./node_modules/.bin/netlify status
+                    netlify status
                     ## removed the prod flag and all others are same as prod
-                    ./node_modules/.bin/netlify deploy --dir=build --json | tee deploy-output.json
-                    CI_ENVIRONMENT_URL=$(./node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json)
+                    ##./node_modules/.bin/netlify deploy --dir=build --json | tee deploy-output.json
+                    netlify deploy --dir=build --json | tee deploy-output.json
+                    ##CI_ENVIRONMENT_URL=$(./node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json)
+                    CI_ENVIRONMENT_URL=$(node-jq -r '.deploy_url' deploy-output.json)
                     echo "Prod E2E Phase..."
                     npx playwright test --reporter=html
                 '''
@@ -178,7 +189,8 @@ pipeline {
             agent {
                 docker {
                     // This image has node, hence merging
-                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    //image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    image 'my-playwright'
                     reuseNode true
                     // Donot run it as root and it is not an good idea
                     //args '-u root:root'
@@ -194,12 +206,12 @@ pipeline {
                     node --version
                     echo "Prod Deploy Phase"
                     ## do not use -g arg which will wail with access.
-                    npm install netlify-cli
-                    test -f ./node_modules/.bin/netlify
-                    ./node_modules/.bin/netlify --version
+                    ##npm install netlify-cli
+                    ##test -f ./node_modules/.bin/netlify
+                    netlify --version
                     echo "Deploying to production, Site ID: ${NETLIFY_SITE_ID}"
-                    ./node_modules/.bin/netlify status
-                    ./node_modules/.bin/netlify deploy --dir=build --prod
+                    netlify status
+                    netlify deploy --dir=build --prod
                     echo "Prod E2E Phase..."
                     npx playwright test --reporter=html
                 '''
