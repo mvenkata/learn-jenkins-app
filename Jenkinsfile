@@ -95,7 +95,8 @@ pipeline {
                 sh '''
                    ## do not use -g arg which will wail with access.
                    npm install netlify-cli
-                   netlify --version
+                   test -f ./node_modules/.bin/netlify
+                   ./node_modules/.bin/netlify/netlify --version
                 '''
             }
         }
