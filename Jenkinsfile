@@ -80,7 +80,7 @@ pipeline {
 
                     post {
                         always {
-                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwrite HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwrite Local Report', reportTitles: '', useWrapperFileDirectly: true])
                         }
                     }
                 }    
@@ -109,5 +109,36 @@ pipeline {
                 '''
             }
         }
+
+        stage('Prod E2E') {
+            
+            environment {
+                CI_ENVIRONMENT_URL='https://elegant-pika-614d48.netlify.app'
+            }
+    }
+            /*
+                This is End2End test phase with docke
+            */
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    reuseNode true
+                    // Donot run it as root and it is not an good idea
+                    //args '-u root:root'
+                }
+            }
+            steps {
+                sh '''
+                    echo "Prod E2E Phase..."
+                    npx playwright test --reporter=html
+                '''
+            }
+
+            post {
+                always {
+                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwrite E2E Report', reportTitles: '', useWrapperFileDirectly: true])
+                }
+            }
+        }    
     }
 }
