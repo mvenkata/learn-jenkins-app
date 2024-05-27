@@ -47,7 +47,7 @@ pipeline {
             */
             agent {
                 docker {
-                    image 'mcr.microsoft.com/playwright:v1.44.1-jammy'
+                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
                     reuseNode true
                     // Donot run it as root and it is not an good idea
                     //args '-u root:root'
