@@ -49,13 +49,15 @@ pipeline {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.44.1-jammy'
                     reuseNode true
+                    // Donot run it as root and it is not an good idea
+                    //args '-u root:root'
                 }
             }
              steps {
                 sh '''
                     echo "E2E Phase"
                     npm install -g serve
-                    serve -s build
+                    node_modules/.bin/serve -s build
                     npx playwright test
                 '''
             }
