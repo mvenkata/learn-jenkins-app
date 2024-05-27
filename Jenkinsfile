@@ -88,7 +88,29 @@ pipeline {
 
         }
 
-        stage('Deploy') {
+        stage('Deploy Staging') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                   ## do not use -g arg which will wail with access.
+                   npm install netlify-cli
+                   test -f ./node_modules/.bin/netlify
+                   ./node_modules/.bin/netlify --version
+                   echo "Deploying to Staging, Site ID: ${NETLIFY_SITE_ID}"
+                   ./node_modules/.bin/netlify status
+                   ## removed the prod flag and all others are same as prod
+                   ./node_modules/.bin/netlify deploy --dir=build
+
+
+                '''
+            }
+        }
+        stage('Deploy Prod') {
             agent {
                 docker {
                     image 'node:18-alpine'
