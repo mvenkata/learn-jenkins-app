@@ -69,7 +69,8 @@ pipeline {
                     */
                     agent {
                         docker {
-                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                            ##image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                            image 'my-playwright'
                             reuseNode true
                             // Donot run it as root and it is not an good idea
                             //args '-u root:root'
@@ -78,7 +79,7 @@ pipeline {
                     steps {
                         sh '''
                             echo "E2E Phase..."
-                            npm install serve
+                            ##npm install serve
                             ## Run in background in order to avoid stuck in jenkins
                             node_modules/.bin/serve -s build &
                             sleep 10
