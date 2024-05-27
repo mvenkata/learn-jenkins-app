@@ -69,7 +69,7 @@ pipeline {
                     }
                     steps {
                         sh '''
-                            echo "E2E Phase"
+                            echo "E2E Phase..."
                             npm install serve
                             ## Run in background in order to avoid stuck in jenkins
                             node_modules/.bin/serve -s build &
@@ -87,7 +87,6 @@ pipeline {
             }
 
         }
-
 
         stage('Deploy') {
             agent {
